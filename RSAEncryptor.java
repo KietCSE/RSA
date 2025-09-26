@@ -1,7 +1,8 @@
 import java.math.BigInteger;
 
 public class RSAEncryptor {
-    // encrypt message
+
+    // encrypt message (message < n)
     public static BigInteger encrypt(BigInteger message, BigInteger e, BigInteger n) {
         return null;
     }

@@ -8,5 +8,7 @@ public class Utils {
         return a;
     }
 
-    // OTHER METHODS
+    // OTHER METHODS SUSH AS power, mode,...
+    // need to recofirm with the lecture to be sure what function need to be
+    // implemented
 }
