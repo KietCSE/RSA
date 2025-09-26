@@ -9,6 +9,6 @@ public class Utils {
     }
 
     // OTHER METHODS SUSH AS power, mode,...
-    // need to recofirm with the lecture to be sure what function need to be
+    // need to recofirm with the lecturer to be sure what function need to be
     // implemented
 }
