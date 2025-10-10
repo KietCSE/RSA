@@ -4,11 +4,11 @@ public class RSAEncryptor {
 
     // encrypt message (message < n)
     public static BigInteger encrypt(BigInteger message, BigInteger e, BigInteger n) {
-        return null;
+        return message.modPow(e, n);
     }
 
     // decrypt cipher
     public static BigInteger decrypt(BigInteger cipher, BigInteger d, BigInteger n) {
-        return null;
+        return cipher.modPow(d, n);
     }
 }

@@ -8,14 +8,24 @@ public class KeyPair {
     // n
     private BigInteger modulus;
 
+    public KeyPair(BigInteger p, BigInteger q) {
+        BigInteger n = p.multiply(q);
+        BigInteger phi = (p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE)));
+
+        this.modulus = n;
+        this.encryptKey = generateEncryptKey(phi);
+        this.decryptKey = generateDecryptKey(this.encryptKey, phi);
+    }
+
     // find public key with gcd(e,ø(n))=1
     private BigInteger generateEncryptKey(BigInteger phi) {
-        return null;
+        return new BigInteger("65537");
     }
 
     // get decrypt key with e.d=1 mod ø(n) and 0≤d≤ ø(n)
     private BigInteger generateDecryptKey(BigInteger e, BigInteger phi) {
-        return null;
+        BigInteger d = e.modInverse(phi);
+        return d;
     }
 
     // generate random key pair
@@ -25,7 +35,22 @@ public class KeyPair {
     // d = getDecryptKey(e, ø(n))
     // return (e, d, n)
     public static KeyPair generateRandomKeyPair(BigInteger p, BigInteger q) {
-        // TODO
+        // BigInteger n = p.multiply(q);
+        // BigInteger phi =
+        // (p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE)));
+
         return null;
+    }
+
+    public BigInteger getEncryptKey() {
+        return encryptKey;
+    }
+
+    public BigInteger getDecryptKey() {
+        return decryptKey;
+    }
+
+    public BigInteger getModulus() {
+        return modulus;
     }
 }
