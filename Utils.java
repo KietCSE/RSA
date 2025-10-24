@@ -45,7 +45,7 @@ public class Utils {
         BigInteger d = vals[0];
         BigInteger x = vals[1];
         if (!d.equals(BigInteger.ONE)) {
-            return BigInteger.ZERO;
+            throw new IllegalArgumentException("No modular inverse exists for " + a + " and " + phi);
         } else {
             return (x.mod(phi).add(phi)).mod(phi);
         }
