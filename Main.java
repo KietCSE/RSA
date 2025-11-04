@@ -1,6 +1,7 @@
+
 public class Main {
     public static void main(String[] args) {
-        System.out.println("Hello world!");
+        // System.out.println("Hello world!");
 
         // BigInteger p = primeGen.generatePrime(512);
         // BigInteger q = primeGen.generatePrime(512);
@@ -12,5 +13,7 @@ public class Main {
 
         // BigInteger decrypted = RSAEncryptor.decrypt(cipher, keyPair.d, keyPair.n);
         // System.out.println("Decrypted: " + decrypted);
+        // Test
+        Test.testModPow(10, 4096);
     }
 }
