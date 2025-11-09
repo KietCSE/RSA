@@ -1,20 +1,10 @@
-
 public class Main {
     public static void main(String[] args) {
-        // System.out.println("Hello world!");
+        int bitLength = 2048; // RSA key size (modulus)
+        KeyPair keyPair = KeyPair.generateRandomKeyPair(bitLength);
 
-        // Test.testModMulInverse(10, 32, 2048);
-        // BigInteger p = primeGen.generatePrime(512);
-        // BigInteger q = primeGen.generatePrime(512);
-        // KeyPair keyPair = KeyPair.generateRandomKeyPair(p, q);
-        // BigInteger message = new BigInteger("1234567890");
-
-        // BigInteger cipher = RSAEncryptor.encrypt(message, keyPair.e, keyPair.n);
-        // System.out.println("Cipher: " + cipher);
-
-        // BigInteger decrypted = RSAEncryptor.decrypt(cipher, keyPair.d, keyPair.n);
-        // System.out.println("Decrypted: " + decrypted);
-        // Test
-        Test.testModPow(10, 4096);
+        System.out.println("Public key (e): " + keyPair.getEncryptKey());
+        System.out.println("Private key (d): " + keyPair.getDecryptKey());
+        System.out.println("Modulus (n): " + keyPair.getModulus());
     }
 }
