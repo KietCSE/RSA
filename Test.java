@@ -1,4 +1,5 @@
 import java.math.BigInteger;
+import java.util.Date;
 import java.util.Random;
 
 public class Test {
@@ -42,6 +43,32 @@ public class Test {
             } catch (Exception e) {
                 System.out.println(
                         "There is no value for b that satisfy " + a.toString() + "* b mod " + phi.toString() + " = 1");
+            }
+        }
+
+        System.out.println("Number of test passed: " + i);
+    }
+
+    public static void testPrime(int numberOfTest, int bitLength) {
+        int i;
+        for (i = 0; i < numberOfTest; i++) {
+            try {
+                Date start1 = new Date();
+                BigInteger myPrime = PrimeGenerator.generatePrime(bitLength);
+                Date end1 = new Date();
+
+                System.out.println(
+                        "Start at: " + start1 + "; End at: " + end1 + "; Generated number: " + myPrime.toString());
+                Date start2 = new Date();
+                int certainty = 100;
+
+                if (!myPrime.isProbablePrime(certainty)) {
+                    System.out.println("Fail! Current number is " + myPrime.toString());
+                }
+                Date end2 = new Date();
+                System.out.println("Start checking at: " + start2 + "; Finish checking at: " + end2);
+            } catch (Exception e) {
+                System.out.println("Caught error: " + e.toString());
             }
         }
 
