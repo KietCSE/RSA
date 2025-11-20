@@ -1,29 +1,148 @@
-
 import java.math.BigInteger;
-import java.security.SecureRandom;
+import java.util.Scanner;
 
-public class Main {
+class Main {
+    // Minimum practical bit length for RSA
+    private static final int MIN_BIT_LENGTH = 512;
+
     public static void main(String[] args) {
-        int bitLength = 2048; // RSA key size (modulus)
-        KeyPair keyPair = KeyPair.generateRandomKeyPair(bitLength);
+        final String RED = "\u001B[31m";
+        final String RESET = "\u001B[0m";
 
-        System.out.println("Public key (e): " + keyPair.getEncryptKey());
-        System.out.println("Private key (d): " + keyPair.getDecryptKey());
-        System.out.println("Modulus (n): " + keyPair.getModulus());
+        Scanner scanner = new Scanner(System.in);
 
-        SecureRandom random = new SecureRandom();
-        // Create a message of size bigLength-1 since n is of size bigLength
-        BigInteger message = new BigInteger(bitLength - 1, random);
+        System.out.println("======================================");
+        System.out.println("          RSA Key Generator");
+        System.out.println("======================================");
 
-        System.out.println("Message (m): " + message.toString());
+        int modulusBitLength = 0; // Renamed for clarity (length of N)
+        BigInteger eValue = BigInteger.ZERO;
+        BigInteger message = BigInteger.ZERO;
 
-        BigInteger encryptedMessage = RSAUtils.encrypt(message, keyPair.getEncryptKey(), keyPair.getModulus());
-        System.out.println("Encrypted message (c): " + encryptedMessage.toString());
+        // 1) GET BIT-LENGTH --------------------------------------------------------
+        while (true) {
+            System.out.print("Enter modulus bit-length (positive integer, e.g., 512, 1024): ");
+            String input = scanner.nextLine().trim();
+            try {
+                modulusBitLength = Integer.parseInt(input);
+                if (modulusBitLength < MIN_BIT_LENGTH) {
+                    System.out.println(
+                            RED + "Error: bit-length should be at least " + MIN_BIT_LENGTH + " for security." + RESET);
+                    continue;
+                }
+                break;
+            } catch (NumberFormatException ex) {
+                System.out.println(RED + "Error: bit-length must be a valid integer." + RESET);
+            }
+        }
 
-        BigInteger decryptedMessage = RSAUtils.decrypt(encryptedMessage, keyPair.getDecryptKey(), keyPair.getModulus());
-        System.out.println("Decrypted message (m'): " + decryptedMessage.toString());
+        // 2) GET e-VALUE -----------------------------------------------------------
+        // Note: The key generation loop will re-prompt this if needed
+        while (true) {
+            System.out.print("Enter e-value (-1 for auto, or a prime number): ");
+            String input = scanner.nextLine().trim();
 
-        System.out.println(
-                "Decrypted message is equal to original message: " + (message.compareTo(decryptedMessage) == 0));
+            try {
+                eValue = new BigInteger(input);
+
+                if (eValue.equals(BigInteger.valueOf(-1))) {
+                    // OK: auto-generate
+                    break;
+                }
+
+                if (eValue.compareTo(BigInteger.ONE) <= 0) {
+                    System.out.println(RED + "Error: e-value must be > 1 or -1 for auto-generation." + RESET);
+                    continue;
+                }
+
+                // Check primality
+                if (!eValue.isProbablePrime(50)) {
+                    System.out.println(RED + "Error: e-value must be prime (or -1)." + RESET);
+                    continue;
+                }
+
+                break;
+            } catch (Exception ex) {
+                System.out.println(RED + "Error: invalid BigInteger for e-value." + RESET);
+            }
+        }
+
+        // 3) GET MESSAGE ------------------------------
+        while (true) {
+            System.out.print("Enter message (positive integer): ");
+            String input = scanner.nextLine().trim();
+
+            try {
+                message = new BigInteger(input);
+
+                if (message.compareTo(BigInteger.ZERO) <= 0) {
+                    System.out.println(RED + "Error: message must be a positive integer." + RESET);
+                    continue;
+                }
+
+                if (message.bitLength() >= modulusBitLength) {
+                    System.out.println(RED + "Error: message bit-length (" + message.bitLength() +
+                            ") must be smaller than the modulus bit-length (" + modulusBitLength + ")." + RESET);
+                    continue;
+                }
+
+                break;
+            } catch (Exception ex) {
+                System.out.println(RED + "Error: invalid BigInteger for message." + RESET);
+            }
+        }
+
+        // Done collecting inputs
+        System.out.println("\nGenerating RSA Key Pair...");
+        KeyPair keyPair = null;
+
+        // 4) KEY GENERATION (Robust loop with re-prompt for e-value) ----------------
+        while (keyPair == null) {
+            try {
+                if (eValue.equals(BigInteger.valueOf(-1)))
+                    eValue = null;
+                keyPair = KeyPair.generateRandomKeyPair(modulusBitLength, eValue);
+            } catch (Exception ex) {
+                System.out.println(RED + "Key Generation Error: " + ex.getMessage() + RESET);
+
+                // Re-prompt for a valid e-value only
+                System.out.println("Please re-enter a compatible e-value.");
+                boolean validE = false;
+                while (!validE) {
+                    System.out.print("Enter e-value (-1 for auto, or a prime number): ");
+                    String input = scanner.nextLine().trim();
+                    try {
+                        BigInteger tempE = new BigInteger(input);
+
+                        // Check if the input is -1 OR (a prime > 1)
+                        if (tempE.equals(BigInteger.valueOf(-1)) ||
+                                (tempE.compareTo(BigInteger.ONE) > 0 && tempE.isProbablePrime(50))) {
+                            eValue = tempE;
+                            validE = true;
+                        } else {
+                            System.out.println(RED + "Invalid e-value. Must be -1 or a prime > 1. Try again." + RESET);
+                        }
+                    } catch (Exception ignored) {
+                        System.out.println(RED + "Invalid input. Try again." + RESET);
+                    }
+                }
+            }
+        }
+
+        System.out.println("\n--- Generated RSA Key Pair ---");
+        System.out.println(keyPair.toString());
+
+        // 5) ENCRYPT ---------------------------------------------------------------
+        BigInteger cipher = RSAUtils.encrypt(message, keyPair.getEncryptKey(), keyPair.getModulus());
+        System.out.println("\nEncrypted message: " + cipher);
+
+        // 6) DECRYPT ---------------------------------------------------------------
+        BigInteger decrypted = RSAUtils.decrypt(cipher, keyPair.getDecryptKey(), keyPair.getModulus());
+        System.out.println("Decrypted message: " + decrypted);
+
+        // 7) COMPARE ---------------------------------------------------------------
+        System.out.println("\nMessage matches after decrypt: " + message.equals(decrypted));
+
+        scanner.close();
     }
 }
