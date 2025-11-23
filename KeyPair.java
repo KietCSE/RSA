@@ -54,23 +54,32 @@ public class KeyPair {
 
     // Generate random RSA key pair using two random primes p, q
     public static KeyPair generateRandomKeyPair(int bitLength, BigInteger choosenE) {
-        // Generate two large primes p and q
-        BigInteger p = PrimeGenerator.generatePrime(bitLength / 2);
-        BigInteger q = PrimeGenerator.generatePrime(bitLength / 2);
-
-        // Ensure p != q
-        while (p.equals(q)) {
+        BigInteger p;
+        BigInteger q;
+        BigInteger e;
+        BigInteger phi;
+        BigInteger n;
+        do {
+            // Generate two large primes p and q
+            p = PrimeGenerator.generatePrime(bitLength / 2);
             q = PrimeGenerator.generatePrime(bitLength / 2);
-        }
 
-        // Compute n = p * q
-        BigInteger n = p.multiply(q);
+            // Ensure p != q
+            while (p.equals(q)) {
+                q = PrimeGenerator.generatePrime(bitLength / 2);
+            }
 
-        // Compute φ(n) = (p - 1)(q - 1)
-        BigInteger phi = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
+            // Compute n = p * q
+            n = p.multiply(q);
 
-        // Generate e and d
-        BigInteger e = generateEncryptKey(phi, choosenE);
+            // Compute φ(n) = (p - 1)(q - 1)
+            phi = (p.subtract(BigInteger.ONE)).multiply(q.subtract(BigInteger.ONE));
+
+            // Generate e
+            e = generateEncryptKey(phi, choosenE);
+        } while (!RSAPrimeVerifier.verifyPrimeForRSA(p, q, e));
+
+        // Generate d
         BigInteger d = generateDecryptKey(e, phi);
 
         return new KeyPair(p, q, e, d, n);
