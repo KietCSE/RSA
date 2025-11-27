@@ -3,17 +3,21 @@
 # Create bin directory if it doesn't exist
 mkdir -p bin
 
-# Compile all Java files (both default package and com.example package)
-# We compile everything together to ensure dependencies are resolved
+# Compile all Java files
 echo "Compiling..."
 javac -d bin *.java com/example/*.java
 
 if [ $? -eq 0 ]; then
     echo "Compilation successful."
-    echo "Running TestJCA..."
+    
+    # Package into a JAR file to satisfy JCE's expectation of a file-based code source
+    echo "Packaging into myrsa.jar..."
+    jar cf myrsa.jar -C bin .
+
+    echo "Running TestJCA with JAR..."
     echo "--------------------------------------------------"
-    # Run the TestJCA class, ensuring bin is in the classpath
-    java -cp bin com.example.TestJCA
+    # Run using the JAR in classpath
+    java -cp myrsa.jar com.example.TestJCA
 else
     echo "Compilation failed."
 fi

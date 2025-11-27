@@ -143,6 +143,81 @@ class Main {
         // 7) COMPARE ---------------------------------------------------------------
         System.out.println("\nMessage matches after decrypt: " + message.equals(decrypted));
 
+        // ===============================================================================================
+        // DEMONSTRATION OF IMPROVEMENTS
+        // ===============================================================================================
+
+        System.out.println("\n======================================");
+        System.out.println("       IMPROVEMENTS DEMO");
+        System.out.println("======================================");
+
+        // --- 1. Strong Key Generation ---
+        System.out.println("\n[1] Generating Strong Key Pair (Higher Certainty, Checks)...");
+        long startKeyGen = System.currentTimeMillis();
+        KeyPair strongKeyPair = KeyPair.generateStrongKeyPair(modulusBitLength, eValue);
+        long endKeyGen = System.currentTimeMillis();
+        System.out.println("Strong Key Pair Generated in " + (endKeyGen - startKeyGen) + " ms.");
+        System.out.println("Public Key: (" + strongKeyPair.getEncryptKey() + ", ...)");
+
+        // --- 2. OAEP Encryption ---
+        System.out.println("\n[2] OAEP Encryption (Security against Chosen Ciphertext Attack)");
+        System.out.println("Encrypting the same message twice with OAEP...");
+
+        BigInteger oaepCipher1 = RSAUtils.encryptOAEP(message, strongKeyPair.getEncryptKey(),
+                strongKeyPair.getModulus());
+        BigInteger oaepCipher2 = RSAUtils.encryptOAEP(message, strongKeyPair.getEncryptKey(),
+                strongKeyPair.getModulus());
+
+        System.out.println("Ciphertext 1: "
+                + oaepCipher1.toString().substring(0, Math.min(50, oaepCipher1.toString().length())) + "...");
+        System.out.println("Ciphertext 2: "
+                + oaepCipher2.toString().substring(0, Math.min(50, oaepCipher2.toString().length())) + "...");
+
+        if (!oaepCipher1.equals(oaepCipher2)) {
+            System.out.println("SUCCESS: Ciphertexts are different! (Random padding active)");
+        } else {
+            System.out.println("FAILURE: Ciphertexts are identical!");
+        }
+
+        BigInteger oaepDecrypted = RSAUtils.decryptOAEP(oaepCipher1, strongKeyPair.getDecryptKey(),
+                strongKeyPair.getModulus());
+        System.out.println("Decrypted OAEP: " + oaepDecrypted);
+        System.out.println("Match: " + message.equals(oaepDecrypted));
+
+        // --- 3. CRT Decryption Speed Test ---
+        System.out.println("\n[3] CRT Decryption Speed Test");
+        // Warmup
+        for (int i = 0; i < 100; i++)
+            RSAUtils.decrypt(cipher, keyPair.getDecryptKey(), keyPair.getModulus());
+
+        int iterations = 1000;
+        System.out.println("Running " + iterations + " decryptions...");
+
+        // Standard
+        long startStd = System.currentTimeMillis();
+        for (int i = 0; i < iterations; i++) {
+            RSAUtils.decrypt(cipher, strongKeyPair.getDecryptKey(), strongKeyPair.getModulus());
+        }
+        long endStd = System.currentTimeMillis();
+        long timeStd = endStd - startStd;
+
+        // CRT
+        long startCRT = System.currentTimeMillis();
+        for (int i = 0; i < iterations; i++) {
+            RSAUtils.decryptCRT(cipher, strongKeyPair);
+        }
+        long endCRT = System.currentTimeMillis();
+        long timeCRT = endCRT - startCRT;
+
+        System.out.println("Standard Decryption Time: " + timeStd + " ms");
+        System.out.println("CRT Decryption Time:      " + timeCRT + " ms");
+        if (timeCRT < timeStd) {
+            System.out.printf("Speedup: %.2fx faster\n", (double) timeStd / timeCRT);
+        } else {
+            System.out.println(
+                    "Note: CRT might be slower for small keys or due to overhead in this Java implementation.");
+        }
+
         scanner.close();
     }
 }

@@ -5,16 +5,30 @@ public class PrimeGenerator {
 
     private static final int CERTAINTY = 10; // Number of Miller-Rabin rounds (higher = more accurate)
 
-    // Generate a probable prime number with the specified bit length
+    // Generate a probable prime number with the specified bit length using default
+    // certainty
     public static BigInteger generatePrime(int bitLength) {
+        return generatePrime(bitLength, CERTAINTY);
+    }
+
+    /**
+     * Generates a probable prime number with the specified bit length and
+     * certainty.
+     * 
+     * @param bitLength The bit length of the prime to generate.
+     * @param certainty The number of Miller-Rabin rounds to perform. Higher = more
+     *                  secure.
+     * @return A probable prime BigInteger.
+     */
+    public static BigInteger generatePrime(int bitLength, int certainty) {
         SecureRandom random = new SecureRandom();
 
         while (true) {
             // Generate a random odd number of the given bit length
             BigInteger candidate = new BigInteger(bitLength, random).setBit(bitLength - 1).setBit(0);
 
-            // Test primality
-            if (isProbablePrime(candidate, CERTAINTY)) {
+            // Test primality with custom certainty
+            if (isProbablePrime(candidate, certainty)) {
                 return candidate;
             }
         }

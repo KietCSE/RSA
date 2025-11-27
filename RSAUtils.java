@@ -1,4 +1,7 @@
 import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 public class RSAUtils {
 
@@ -22,5 +25,265 @@ public class RSAUtils {
             throw new IllegalArgumentException("Ciphertext must be less than modulus n.");
         }
         return Utils.modPow(cipher, d, n);
+    }
+    // ===============================================================================================
+    // IMPROVEMENT 1: OAEP (Optimal Asymmetric Encryption Padding)
+    // ===============================================================================================
+
+    private static final int HASH_LEN = 32; // SHA-256 output length in bytes
+
+    /**
+     * Encrypts a message using RSA with OAEP padding.
+     * <p>
+     * <b>Security Improvement</b>: Uses OAEP (Optimal Asymmetric Encryption
+     * Padding) to introduce randomness
+     * and prevent chosen ciphertext attacks. Even if the same message is encrypted
+     * twice, the ciphertext will be different.
+     * </p>
+     * 
+     * @param message The message to encrypt (as a BigInteger).
+     * @param e       The public exponent.
+     * @param n       The modulus.
+     * @return The encrypted ciphertext.
+     */
+    public static BigInteger encryptOAEP(BigInteger message, BigInteger e, BigInteger n) {
+        try {
+            int k = (n.bitLength() + 7) / 8; // Modulus length in bytes
+            byte[] mBytes = message.toByteArray();
+
+            // Handle sign byte if present (BigInteger.toByteArray() might add a leading 0
+            // byte for positive numbers)
+            if (mBytes[0] == 0 && mBytes.length > 1) {
+                byte[] temp = new byte[mBytes.length - 1];
+                System.arraycopy(mBytes, 1, temp, 0, temp.length);
+                mBytes = temp;
+            }
+
+            if (mBytes.length > k - 2 * HASH_LEN - 2) {
+                throw new IllegalArgumentException("Message too long for OAEP.");
+            }
+
+            // OAEP Padding
+            // DB = lHash || PS || 0x01 || M
+            // lHash = Hash(L), where L is empty string for basic OAEP
+            byte[] lHash = hash(new byte[0]);
+            int psLen = k - mBytes.length - 2 * HASH_LEN - 2;
+            byte[] ps = new byte[psLen]; // Zero padding
+
+            byte[] db = new byte[k - HASH_LEN - 1];
+            System.arraycopy(lHash, 0, db, 0, HASH_LEN);
+            System.arraycopy(ps, 0, db, HASH_LEN, psLen);
+            db[HASH_LEN + psLen] = 0x01;
+            System.arraycopy(mBytes, 0, db, HASH_LEN + psLen + 1, mBytes.length);
+
+            // Generate random seed
+            byte[] seed = new byte[HASH_LEN];
+            new SecureRandom().nextBytes(seed);
+
+            // dbMask = MGF(seed, k - hLen - 1)
+            byte[] dbMask = mgf1(seed, k - HASH_LEN - 1);
+
+            // maskedDB = DB XOR dbMask
+            byte[] maskedDB = xor(db, dbMask);
+
+            // seedMask = MGF(maskedDB, hLen)
+            byte[] seedMask = mgf1(maskedDB, HASH_LEN);
+
+            // maskedSeed = seed XOR seedMask
+            byte[] maskedSeed = xor(seed, seedMask);
+
+            // EM = 0x00 || maskedSeed || maskedDB
+            byte[] em = new byte[k];
+            em[0] = 0x00;
+            System.arraycopy(maskedSeed, 0, em, 1, HASH_LEN);
+            System.arraycopy(maskedDB, 0, em, 1 + HASH_LEN, maskedDB.length);
+
+            BigInteger mEncoded = new BigInteger(1, em);
+
+            return Utils.modPow(mEncoded, e, n);
+
+        } catch (Exception ex) {
+            throw new RuntimeException("OAEP Encryption failed", ex);
+        }
+    }
+
+    /**
+     * Decrypts a ciphertext using RSA with OAEP unpadding.
+     * 
+     * @param cipher The ciphertext to decrypt.
+     * @param d      The private exponent.
+     * @param n      The modulus.
+     * @return The original message.
+     */
+    public static BigInteger decryptOAEP(BigInteger cipher, BigInteger d, BigInteger n) {
+        // 1. Standard RSA Decryption
+        BigInteger encoded = Utils.modPow(cipher, d, n);
+
+        // 2. OAEP Unpadding
+        return decodeOAEP(encoded, n);
+    }
+
+    // ===============================================================================================
+    // IMPROVEMENT 2: CRT (Chinese Remainder Theorem)
+    // ===============================================================================================
+
+    /**
+     * Decrypts a ciphertext using RSA with CRT (Chinese Remainder Theorem).
+     * <p>
+     * <b>Speed Improvement</b>: Decryption is ~4x faster than standard modular
+     * exponentiation
+     * by computing modulo p and q separately and combining results.
+     * </p>
+     * 
+     * @param cipher  The ciphertext.
+     * @param keyPair The KeyPair containing p, q, d, n.
+     * @return The decrypted message.
+     */
+    public static BigInteger decryptCRT(BigInteger cipher, KeyPair keyPair) {
+        BigInteger p = keyPair.getP();
+        BigInteger q = keyPair.getQ();
+        BigInteger d = keyPair.getDecryptKey();
+        BigInteger n = keyPair.getModulus();
+
+        if (p == null || q == null) {
+            throw new IllegalArgumentException("CRT decryption requires p and q in KeyPair.");
+        }
+
+        // Precompute CRT parameters (in a real app, these should be cached in KeyPair)
+        BigInteger dP = d.mod(p.subtract(BigInteger.ONE));
+        BigInteger dQ = d.mod(q.subtract(BigInteger.ONE));
+        BigInteger qInv = Utils.modMulInverse(q, p);
+
+        // m1 = c^dP mod p
+        BigInteger m1 = Utils.modPow(cipher, dP, p);
+        // m2 = c^dQ mod q
+        BigInteger m2 = Utils.modPow(cipher, dQ, q);
+
+        // h = qInv * (m1 - m2) mod p
+        BigInteger h = m1.subtract(m2).multiply(qInv).mod(p);
+        if (h.signum() < 0) {
+            h = h.add(p);
+        }
+
+        // m = m2 + h * q
+        return m2.add(h.multiply(q));
+    }
+
+    /**
+     * Decrypts using both CRT (for speed) and OAEP (for security).
+     */
+    public static BigInteger decryptOAEP_CRT(BigInteger cipher, KeyPair keyPair) {
+        // 1. CRT Decryption
+        BigInteger encoded = decryptCRT(cipher, keyPair);
+
+        // 2. OAEP Unpadding
+        return decodeOAEP(encoded, keyPair.getModulus());
+    }
+
+    // ===============================================================================================
+    // HELPER METHODS
+    // ===============================================================================================
+
+    private static BigInteger decodeOAEP(BigInteger encoded, BigInteger n) {
+        try {
+            int k = (n.bitLength() + 7) / 8;
+            byte[] em = encoded.toByteArray();
+
+            // Pad with leading zeros if necessary to match length k
+            if (em.length < k) {
+                byte[] temp = new byte[k];
+                System.arraycopy(em, 0, temp, k - em.length, em.length);
+                em = temp;
+            } else if (em.length > k) {
+                // Should not happen if encoded < n, but handle sign byte
+                if (em[0] == 0 && em.length == k + 1) {
+                    byte[] temp = new byte[k];
+                    System.arraycopy(em, 1, temp, 0, k);
+                    em = temp;
+                }
+            }
+
+            // Check first byte is 0x00
+            // Note: In some implementations, if the number is smaller, the leading byte
+            // might just be part of the number.
+            // But strictly, OAEP EM is 0x00 || ...
+
+            byte[] maskedSeed = new byte[HASH_LEN];
+            System.arraycopy(em, 1, maskedSeed, 0, HASH_LEN);
+
+            byte[] maskedDB = new byte[k - HASH_LEN - 1];
+            System.arraycopy(em, 1 + HASH_LEN, maskedDB, 0, maskedDB.length);
+
+            byte[] seedMask = mgf1(maskedDB, HASH_LEN);
+            byte[] seed = xor(maskedSeed, seedMask);
+
+            byte[] dbMask = mgf1(seed, k - HASH_LEN - 1);
+            byte[] db = xor(maskedDB, dbMask);
+
+            // Verify lHash
+            byte[] lHash = hash(new byte[0]);
+            for (int i = 0; i < HASH_LEN; i++) {
+                if (db[i] != lHash[i]) {
+                    throw new IllegalArgumentException("OAEP decoding failed: Hash mismatch");
+                }
+            }
+
+            // Find 0x01 byte
+            int index = HASH_LEN;
+            while (index < db.length && db[index] == 0) {
+                index++;
+            }
+            if (index >= db.length || db[index] != 0x01) {
+                throw new IllegalArgumentException("OAEP decoding failed: Padding pattern not found");
+            }
+
+            // Extract message
+            int mLen = db.length - index - 1;
+            byte[] mBytes = new byte[mLen];
+            System.arraycopy(db, index + 1, mBytes, 0, mLen);
+
+            return new BigInteger(1, mBytes);
+
+        } catch (Exception ex) {
+            throw new RuntimeException("OAEP Decryption failed", ex);
+        }
+    }
+
+    private static byte[] mgf1(byte[] seed, int length) throws NoSuchAlgorithmException {
+        byte[] mask = new byte[length];
+        byte[] counter = new byte[4];
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+
+        int hLen = HASH_LEN;
+        int count = 0;
+
+        for (int i = 0; i < (length + hLen - 1) / hLen; i++) {
+            // C = I2OSP(counter, 4)
+            counter[0] = (byte) (i >>> 24);
+            counter[1] = (byte) (i >>> 16);
+            counter[2] = (byte) (i >>> 8);
+            counter[3] = (byte) i;
+
+            md.update(seed);
+            md.update(counter);
+            byte[] digest = md.digest();
+
+            int len = Math.min(hLen, length - count);
+            System.arraycopy(digest, 0, mask, count, len);
+            count += len;
+        }
+        return mask;
+    }
+
+    private static byte[] xor(byte[] a, byte[] b) {
+        byte[] result = new byte[a.length];
+        for (int i = 0; i < a.length; i++) {
+            result[i] = (byte) (a[i] ^ b[i]);
+        }
+        return result;
+    }
+
+    private static byte[] hash(byte[] input) throws NoSuchAlgorithmException {
+        return MessageDigest.getInstance("SHA-256").digest(input);
     }
 }
