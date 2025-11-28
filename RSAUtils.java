@@ -132,11 +132,6 @@ public class RSAUtils implements RSACipher {
 
     /**
      * Decrypts a ciphertext using RSA with CRT (Chinese Remainder Theorem).
-     * <p>
-     * <b>Speed Improvement</b>: Decryption is ~4x faster than standard modular
-     * exponentiation
-     * by computing modulo p and q separately and combining results.
-     * </p>
      * 
      * @param cipher  The ciphertext.
      * @param keyPair The KeyPair containing p, q, d, n.
@@ -184,10 +179,6 @@ public class RSAUtils implements RSACipher {
         return decodeOAEP(encoded, keyPair.getModulus());
     }
 
-    // ===============================================================================================
-    // HELPER METHODS
-    // ===============================================================================================
-
     private static BigInteger decodeOAEP(BigInteger encoded, BigInteger n) {
         try {
             int k = (n.bitLength() + 7) / 8;
@@ -209,9 +200,6 @@ public class RSAUtils implements RSACipher {
             }
 
             // Check first byte is 0x00
-            // Note: In some implementations, if the number is smaller, the leading byte
-            // might just be part of the number.
-            // But strictly, OAEP EM is 0x00 || ...
             if (em[0] != 0x00) {
                 throw new IllegalArgumentException("Invalid OAEP padding.");
             }
