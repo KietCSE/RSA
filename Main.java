@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 class Main {
     // Minimum practical bit length for RSA
-    private static final int MIN_BIT_LENGTH = 512;
+    private static final int MIN_BIT_LENGTH = 1024;
 
     public static void main(String[] args) {
         final String RED = "\u001B[31m";
@@ -20,7 +20,7 @@ class Main {
 
         // 1) GET BIT-LENGTH --------------------------------------------------------
         while (true) {
-            System.out.print("Enter modulus bit-length (positive integer, e.g., 512, 1024): ");
+            System.out.print("Enter modulus bit-length (positive integer, e.g., 1024, 2048): ");
             String input = scanner.nextLine().trim();
             try {
                 modulusBitLength = Integer.parseInt(input);

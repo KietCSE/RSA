@@ -59,8 +59,13 @@ public class RSAUtils implements RSACipher {
                 mBytes = temp;
             }
 
-            if (mBytes.length > k - 2 * HASH_LEN - 2) {
-                throw new IllegalArgumentException("Message too long for OAEP.");
+            int maxMsgLen = k - 2 * HASH_LEN - 2;
+            if (mBytes.length > maxMsgLen) {
+                throw new IllegalArgumentException(String.format(
+                        "Message too long for OAEP. Max allowed: %d bytes, Actual: %d bytes. " +
+                                "Key size: %d bits (%d bytes), OAEP Overhead: %d bytes. " +
+                                "Try increasing key size to at least 1024 bits.",
+                        maxMsgLen, mBytes.length, n.bitLength(), k, 2 * HASH_LEN + 2));
             }
 
             // OAEP Padding
