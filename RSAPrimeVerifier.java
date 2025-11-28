@@ -8,7 +8,7 @@ public class RSAPrimeVerifier {
     // Minimum difference between p and q in bits
     private static final int MIN_BIT_DIFF_VALUE = 50;
 
-    public static boolean verifyPrimeForRSA(BigInteger p, BigInteger q, BigInteger e) {
+    public static boolean verifyPrimeForRSA(BigInteger p, BigInteger q) {
         // Ensure p and q are not too close in value
         BigInteger diff = p.subtract(q).abs();
         if (diff.bitLength() < MIN_BIT_DIFF_VALUE) {

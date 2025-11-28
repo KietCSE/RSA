@@ -5,6 +5,8 @@ public class PrimeGenerator {
 
     private static final int CERTAINTY = 10; // Number of Miller-Rabin rounds (higher = more accurate)
 
+    private static final int[] SMALL_PRIMES = { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53 };
+
     // Generate a probable prime number with the specified bit length using default
     // certainty
     public static BigInteger generatePrime(int bitLength) {
@@ -43,6 +45,17 @@ public class PrimeGenerator {
             return true;
         if (n.mod(BigInteger.TWO).equals(BigInteger.ZERO))
             return false;
+        if (!n.testBit(0))
+            return false;
+
+        // check small primes first
+        for (int p : SMALL_PRIMES) {
+            BigInteger bigP = BigInteger.valueOf(p);
+            if (n.equals(bigP))
+                return true;
+            if (n.mod(bigP).equals(BigInteger.ZERO))
+                return false;
+        }
 
         // Write n - 1 as 2 ^ k * q with q odd
         BigInteger q = n.subtract(BigInteger.ONE);

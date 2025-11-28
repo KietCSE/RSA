@@ -3,10 +3,11 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
-public class RSAUtils {
+public class RSAUtils implements RSACipher {
 
     // Encrypt message (message < n)
-    public static BigInteger encrypt(BigInteger message, BigInteger e, BigInteger n) {
+    @Override
+    public BigInteger encrypt(BigInteger message, BigInteger e, BigInteger n) {
         if (message.signum() == -1) {
             throw new IllegalArgumentException("Message must be non-negative.");
         }
@@ -17,7 +18,8 @@ public class RSAUtils {
     }
 
     // Decrypt cipher (cipher < n)
-    public static BigInteger decrypt(BigInteger cipher, BigInteger d, BigInteger n) {
+    @Override
+    public BigInteger decrypt(BigInteger cipher, BigInteger d, BigInteger n) {
         if (cipher.signum() == -1) {
             throw new IllegalArgumentException("Ciphertext must be non-negative.");
         }
@@ -26,6 +28,7 @@ public class RSAUtils {
         }
         return Utils.modPow(cipher, d, n);
     }
+
     // ===============================================================================================
     // IMPROVEMENT 1: OAEP (Optimal Asymmetric Encryption Padding)
     // ===============================================================================================
@@ -34,25 +37,22 @@ public class RSAUtils {
 
     /**
      * Encrypts a message using RSA with OAEP padding.
-     * <p>
-     * <b>Security Improvement</b>: Uses OAEP (Optimal Asymmetric Encryption
-     * Padding) to introduce randomness
-     * and prevent chosen ciphertext attacks. Even if the same message is encrypted
-     * twice, the ciphertext will be different.
-     * </p>
+     * Generate EM = 0x00 || maskedSeed || maskedDB with length = modular length in
+     * bytes. Then encrypt EM using RSA encryption
      * 
      * @param message The message to encrypt (as a BigInteger).
-     * @param e       The public exponent.
+     * @param e       The public exponent (encrypt key)
      * @param n       The modulus.
      * @return The encrypted ciphertext.
      */
-    public static BigInteger encryptOAEP(BigInteger message, BigInteger e, BigInteger n) {
+    @Override
+    public BigInteger encryptOAEP(BigInteger message, BigInteger e, BigInteger n) {
         try {
             int k = (n.bitLength() + 7) / 8; // Modulus length in bytes
             byte[] mBytes = message.toByteArray();
 
             // Handle sign byte if present (BigInteger.toByteArray() might add a leading 0
-            // byte for positive numbers)
+            // byte for positive numbers, we need to remove it)
             if (mBytes[0] == 0 && mBytes.length > 1) {
                 byte[] temp = new byte[mBytes.length - 1];
                 System.arraycopy(mBytes, 1, temp, 0, temp.length);
@@ -77,6 +77,7 @@ public class RSAUtils {
             System.arraycopy(mBytes, 0, db, HASH_LEN + psLen + 1, mBytes.length);
 
             // Generate random seed
+            // Độ dài của maskedSeed LUÔN LUÔN bằng độ dài đầu ra của hàm Hash.
             byte[] seed = new byte[HASH_LEN];
             new SecureRandom().nextBytes(seed);
 
@@ -84,15 +85,16 @@ public class RSAUtils {
             byte[] dbMask = mgf1(seed, k - HASH_LEN - 1);
 
             // maskedDB = DB XOR dbMask
-            byte[] maskedDB = xor(db, dbMask);
+            byte[] maskedDB = Utils.xor(db, dbMask);
 
             // seedMask = MGF(maskedDB, hLen)
             byte[] seedMask = mgf1(maskedDB, HASH_LEN);
 
             // maskedSeed = seed XOR seedMask
-            byte[] maskedSeed = xor(seed, seedMask);
+            byte[] maskedSeed = Utils.xor(seed, seedMask);
 
             // EM = 0x00 || maskedSeed || maskedDB
+            // maskedSeed_length = hash_length
             byte[] em = new byte[k];
             em[0] = 0x00;
             System.arraycopy(maskedSeed, 0, em, 1, HASH_LEN);
@@ -115,7 +117,8 @@ public class RSAUtils {
      * @param n      The modulus.
      * @return The original message.
      */
-    public static BigInteger decryptOAEP(BigInteger cipher, BigInteger d, BigInteger n) {
+    @Override
+    public BigInteger decryptOAEP(BigInteger cipher, BigInteger d, BigInteger n) {
         // 1. Standard RSA Decryption
         BigInteger encoded = Utils.modPow(cipher, d, n);
 
@@ -139,11 +142,11 @@ public class RSAUtils {
      * @param keyPair The KeyPair containing p, q, d, n.
      * @return The decrypted message.
      */
-    public static BigInteger decryptCRT(BigInteger cipher, KeyPair keyPair) {
+    @Override
+    public BigInteger decryptCRT(BigInteger cipher, KeyPair keyPair) {
         BigInteger p = keyPair.getP();
         BigInteger q = keyPair.getQ();
         BigInteger d = keyPair.getDecryptKey();
-        BigInteger n = keyPair.getModulus();
 
         if (p == null || q == null) {
             throw new IllegalArgumentException("CRT decryption requires p and q in KeyPair.");
@@ -172,7 +175,8 @@ public class RSAUtils {
     /**
      * Decrypts using both CRT (for speed) and OAEP (for security).
      */
-    public static BigInteger decryptOAEP_CRT(BigInteger cipher, KeyPair keyPair) {
+    @Override
+    public BigInteger decryptOAEP_CRT(BigInteger cipher, KeyPair keyPair) {
         // 1. CRT Decryption
         BigInteger encoded = decryptCRT(cipher, keyPair);
 
@@ -190,6 +194,7 @@ public class RSAUtils {
             byte[] em = encoded.toByteArray();
 
             // Pad with leading zeros if necessary to match length k
+            // remove unuseful leading zeros of BigInteger
             if (em.length < k) {
                 byte[] temp = new byte[k];
                 System.arraycopy(em, 0, temp, k - em.length, em.length);
@@ -207,6 +212,9 @@ public class RSAUtils {
             // Note: In some implementations, if the number is smaller, the leading byte
             // might just be part of the number.
             // But strictly, OAEP EM is 0x00 || ...
+            if (em[0] != 0x00) {
+                throw new IllegalArgumentException("Invalid OAEP padding.");
+            }
 
             byte[] maskedSeed = new byte[HASH_LEN];
             System.arraycopy(em, 1, maskedSeed, 0, HASH_LEN);
@@ -215,10 +223,10 @@ public class RSAUtils {
             System.arraycopy(em, 1 + HASH_LEN, maskedDB, 0, maskedDB.length);
 
             byte[] seedMask = mgf1(maskedDB, HASH_LEN);
-            byte[] seed = xor(maskedSeed, seedMask);
+            byte[] seed = Utils.xor(maskedSeed, seedMask);
 
             byte[] dbMask = mgf1(seed, k - HASH_LEN - 1);
-            byte[] db = xor(maskedDB, dbMask);
+            byte[] db = Utils.xor(maskedDB, dbMask);
 
             // Verify lHash
             byte[] lHash = hash(new byte[0]);
@@ -228,6 +236,7 @@ public class RSAUtils {
                 }
             }
 
+            // DB = lHash || PS || 0x01 || M
             // Find 0x01 byte
             int index = HASH_LEN;
             while (index < db.length && db[index] == 0) {
@@ -249,6 +258,16 @@ public class RSAUtils {
         }
     }
 
+    /**
+     * MGF1 (Mask Generation Function 1) is a key derivation function that generates
+     * a mask from a seed using a hash function.
+     * Hash many times to generate submask from a seed and concatenate them to get a
+     * mask with enough bit length
+     * 
+     * @param seed   The seed to generate the mask from.
+     * @param length The length of the mask to generate.
+     * @return The generated mask.
+     */
     private static byte[] mgf1(byte[] seed, int length) throws NoSuchAlgorithmException {
         byte[] mask = new byte[length];
         byte[] counter = new byte[4];
@@ -259,15 +278,18 @@ public class RSAUtils {
 
         for (int i = 0; i < (length + hLen - 1) / hLen; i++) {
             // C = I2OSP(counter, 4)
-            counter[0] = (byte) (i >>> 24);
-            counter[1] = (byte) (i >>> 16);
-            counter[2] = (byte) (i >>> 8);
-            counter[3] = (byte) i;
+            // 4 byte big endian
+            counter[0] = (byte) (i >>> 24); // get byte 1
+            counter[1] = (byte) (i >>> 16); // get byte 2
+            counter[2] = (byte) (i >>> 8); // get byte 3
+            counter[3] = (byte) i; // get byte 4
 
+            // digest = SHA-256( seed || counter )
             md.update(seed);
             md.update(counter);
             byte[] digest = md.digest();
 
+            // copy byte to mask
             int len = Math.min(hLen, length - count);
             System.arraycopy(digest, 0, mask, count, len);
             count += len;
@@ -275,13 +297,13 @@ public class RSAUtils {
         return mask;
     }
 
-    private static byte[] xor(byte[] a, byte[] b) {
-        byte[] result = new byte[a.length];
-        for (int i = 0; i < a.length; i++) {
-            result[i] = (byte) (a[i] ^ b[i]);
-        }
-        return result;
-    }
+    // private static byte[] xor(byte[] a, byte[] b) {
+    // byte[] result = new byte[a.length];
+    // for (int i = 0; i < a.length; i++) {
+    // result[i] = (byte) (a[i] ^ b[i]);
+    // }
+    // return result;
+    // }
 
     private static byte[] hash(byte[] input) throws NoSuchAlgorithmException {
         return MessageDigest.getInstance("SHA-256").digest(input);
