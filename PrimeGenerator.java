@@ -56,41 +56,39 @@ public class PrimeGenerator {
             if (n.mod(bigP).equals(BigInteger.ZERO))
                 return false;
         }
+        // Dùng Bitwise thay vì phép chia (Tăng tốc cực lớn)
+        BigInteger nMinus1 = n.subtract(BigInteger.ONE);
+        int k = nMinus1.getLowestSetBit();
+        BigInteger q = nMinus1.shiftRight(k);
 
-        // Write n - 1 as 2 ^ k * q with q odd
-        BigInteger q = n.subtract(BigInteger.ONE);
-        int k = 0;
-        while (q.mod(BigInteger.TWO).equals(BigInteger.ZERO)) {
-            q = q.divide(BigInteger.TWO);
-            k++;
-        }
-
-        // Perform millerRabinRounds of testing
         SecureRandom random = new SecureRandom();
+
         for (int i = 0; i < millerRabinRounds; i++) {
             BigInteger a = uniformRandom(BigInteger.TWO, n.subtract(BigInteger.TWO), random);
             BigInteger x = Utils.modPow(a, q, n);
 
-            if (x.equals(BigInteger.ONE))
+            if (x.equals(BigInteger.ONE) || x.equals(nMinus1))
                 continue;
 
-            boolean continueOuter = false;
-            for (int j = 0; j < k; j++) {
+            boolean isComposite = true;
+            for (int j = 0; j < k - 1; j++) {
                 x = Utils.modPow(x, BigInteger.TWO, n);
-                if (x.equals(n.subtract(BigInteger.ONE))) {
-                    continueOuter = true;
+
+                if (x.equals(nMinus1)) {
+                    isComposite = false;
                     break;
+                }
+
+                if (x.equals(BigInteger.ONE)) {
+                    return false;
                 }
             }
 
-            if (continueOuter)
-                continue;
-
-            // Composite
-            return false;
+            if (isComposite)
+                return false;
         }
 
-        return true; // Probably prime
+        return true;
     }
 
     // Generate a random BigInteger in the range [min, max]
