@@ -20,7 +20,7 @@ class ImprovementsDemo {
 
         // 1) GET BIT-LENGTH --------------------------------------------------------
         while (true) {
-            System.out.print("Enter modulus bit-length (positive integer, e.g., 512, 1024): ");
+            System.out.print("Enter modulus bit-length (positive integer, e.g., 1024, 2048): ");
             String input = scanner.nextLine().trim();
             try {
                 modulusBitLength = Integer.parseInt(input);
@@ -81,9 +81,9 @@ class ImprovementsDemo {
                 strongKeyPair.getModulus());
 
         System.out.println("Ciphertext 1: "
-                + oaepCipher1.toString().substring(0, Math.min(50, oaepCipher1.toString().length())) + "...");
+                + oaepCipher1.toString());
         System.out.println("Ciphertext 2: "
-                + oaepCipher2.toString().substring(0, Math.min(50, oaepCipher2.toString().length())) + "...");
+                + oaepCipher2.toString());
 
         if (!oaepCipher1.equals(oaepCipher2)) {
             System.out.println("SUCCESS: Ciphertexts are different! (Random padding active)");
