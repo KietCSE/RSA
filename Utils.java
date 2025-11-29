@@ -64,4 +64,13 @@ public class Utils {
     // OTHER METHODS SUSH AS power, mode,...
     // need to recofirm with the lecturer to be sure what function need to be
     // implemented
+
+    public static byte[] xor(byte[] a, byte[] b) {
+        byte[] result = new byte[a.length];
+        for (int i = 0; i < a.length; i++) {
+            result[i] = (byte) (a[i] ^ b[i]);
+        }
+        return result;
+    }
+
 }
