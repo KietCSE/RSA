@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 class ImprovementsDemo {
     // Minimum practical bit length for RSA
-    private static final int MIN_BIT_LENGTH = 512;
+    private static final int MIN_BIT_LENGTH = 1024;
 
     public static void main(String[] args) {
         final String RED = "\u001B[31m";
