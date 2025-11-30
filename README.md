@@ -105,6 +105,16 @@ javac *.java -d bin
 - [2] OAEP Encryption randomness test
 - [3] CRT Decryption speed comparison
 
+### 4. Chạy String/Byte Demo
+
+```bash
+./run_string_byte.sh
+```
+
+**Demo sẽ showcase:**
+- [1] String Encryption/Decryption
+- [2] Byte[] Encryption/Decryption
+
 ---
 
 ## 💻 Cách sử dụng
