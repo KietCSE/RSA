@@ -20,7 +20,7 @@ class ImprovementsDemo {
 
         // 1) GET BIT-LENGTH --------------------------------------------------------
         while (true) {
-            System.out.print("Enter modulus bit-length (positive integer, e.g., 512, 1024): ");
+            System.out.print("Enter modulus bit-length (positive integer, e.g., 1024, 2048): ");
             String input = scanner.nextLine().trim();
             try {
                 modulusBitLength = Integer.parseInt(input);

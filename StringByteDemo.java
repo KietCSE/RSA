@@ -10,7 +10,7 @@ public class StringByteDemo {
             System.out.println("=========================================");
 
             // 1. Setup
-            System.out.println("\n[1] Generating Keys...");
+            System.out.println("\n[1] Generating Keys with 1024 bit length...");
             KeyPair keyPair = KeyPair.generateRandomKeyPair(1024);
             RSACipher rsa = new RSAUtils();
 
