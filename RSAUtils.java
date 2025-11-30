@@ -301,4 +301,96 @@ public class RSAUtils implements RSACipher {
     private static byte[] hash(byte[] input) throws NoSuchAlgorithmException {
         return MessageDigest.getInstance("SHA-256").digest(input);
     }
+
+    // EXTENDED OPERATIONS (String & byte[])
+
+    @Override
+    public BigInteger encrypt(String message, BigInteger e, BigInteger n) {
+        return encrypt(message.getBytes(), e, n);
+    }
+
+    @Override
+    public BigInteger encrypt(byte[] message, BigInteger e, BigInteger n) {
+        return encrypt(new BigInteger(1, message), e, n);
+    }
+
+    @Override
+    public String decryptToString(BigInteger cipher, BigInteger d, BigInteger n) {
+        return new String(decryptToBytes(cipher, d, n));
+    }
+
+    @Override
+    public byte[] decryptToBytes(BigInteger cipher, BigInteger d, BigInteger n) {
+        byte[] bytes = decrypt(cipher, d, n).toByteArray();
+        // Remove leading sign byte if present (BigInteger might add it)
+        if (bytes[0] == 0 && bytes.length > 1) {
+            byte[] temp = new byte[bytes.length - 1];
+            System.arraycopy(bytes, 1, temp, 0, temp.length);
+            return temp;
+        }
+        return bytes;
+    }
+
+    @Override
+    public BigInteger encryptOAEP(String message, BigInteger e, BigInteger n) {
+        // convert string to byte array
+        return encryptOAEP(message.getBytes(), e, n);
+    }
+
+    @Override
+    public BigInteger encryptOAEP(byte[] message, BigInteger e, BigInteger n) {
+        // make sure biginteger is always positive
+        return encryptOAEP(new BigInteger(1, message), e, n);
+    }
+
+    @Override
+    public String decryptOAEPToString(BigInteger cipher, BigInteger d, BigInteger n) {
+        return new String(decryptOAEPToBytes(cipher, d, n));
+    }
+
+    @Override
+    public byte[] decryptOAEPToBytes(BigInteger cipher, BigInteger d, BigInteger n) {
+        byte[] bytes = decryptOAEP(cipher, d, n).toByteArray();
+        // Remove leading sign byte if present
+        if (bytes[0] == 0 && bytes.length > 1) {
+            byte[] temp = new byte[bytes.length - 1];
+            System.arraycopy(bytes, 1, temp, 0, temp.length);
+            return temp;
+        }
+        return bytes;
+    }
+
+    @Override
+    public String decryptCRTToString(BigInteger cipher, KeyPair keyPair) {
+        return new String(decryptCRTToBytes(cipher, keyPair));
+    }
+
+    @Override
+    public byte[] decryptCRTToBytes(BigInteger cipher, KeyPair keyPair) {
+        byte[] bytes = decryptCRT(cipher, keyPair).toByteArray();
+        // Remove leading sign byte if present
+        if (bytes[0] == 0 && bytes.length > 1) {
+            byte[] temp = new byte[bytes.length - 1];
+            System.arraycopy(bytes, 1, temp, 0, temp.length);
+            return temp;
+        }
+        return bytes;
+    }
+
+    @Override
+    public String decryptOAEP_CRTToString(BigInteger cipher, KeyPair keyPair) {
+        return new String(decryptOAEP_CRTToBytes(cipher, keyPair));
+    }
+
+    @Override
+    public byte[] decryptOAEP_CRTToBytes(BigInteger cipher, KeyPair keyPair) {
+        byte[] bytes = decryptOAEP_CRT(cipher, keyPair).toByteArray();
+        // Remove leading sign byte if present
+        if (bytes[0] == 0 && bytes.length > 1) {
+            byte[] temp = new byte[bytes.length - 1];
+            System.arraycopy(bytes, 1, temp, 0, temp.length);
+            return temp;
+        }
+        return bytes;
+    }
 }

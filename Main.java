@@ -17,7 +17,6 @@ class Main {
 
         int modulusBitLength = 0; // Renamed for clarity (length of N)
         BigInteger message = BigInteger.ZERO;
-
         // 1) GET BIT-LENGTH --------------------------------------------------------
         while (true) {
             System.out.print("Enter modulus bit-length (positive integer, e.g., 1024, 2048): ");

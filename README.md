@@ -36,6 +36,9 @@ Thư viện RSA với các tính năng bảo mật nâng cao (OAEP padding) và 
 | `decryptOAEP()` | Giải mã với OAEP padding | ✅ Khuyến nghị cho production |
 | `decryptCRT()` | Giải mã nhanh với CRT (~4x faster) | ⚡ Tối ưu hiệu suất |
 | `decryptOAEP_CRT()` | Giải mã nhanh + bảo mật | ⭐ **RECOMMENDED** |
+| `encrypt(String/byte[])` | Mã hóa String hoặc byte[] | ✅ Tiện lợi |
+| `decryptToString()` | Giải mã ra String | ✅ Tiện lợi |
+| `decryptToBytes()` | Giải mã ra byte[] | ✅ Tiện lợi |
 
 ---
 
@@ -58,6 +61,7 @@ Thư viện RSA với các tính năng bảo mật nâng cao (OAEP padding) và 
 |------|---------|-------|
 | **Main.java** | 🚀 **Demo cơ bản** | Demo encrypt/decrypt với OAEP + CRT |
 | **ImprovementsDemo.java** | 📊 **Demo nâng cao** | Benchmark OAEP, CRT, Strong KeyPair |
+| **StringByteDemo.java** | 🔤 **Demo String/Byte** | Demo mã hóa/giải mã String và byte[] |
 | **Test.java** | 🧪 **Testing** | Unit tests cho các components |
 
 ### Scripts & Documentation
@@ -66,7 +70,8 @@ Thư viện RSA với các tính năng bảo mật nâng cao (OAEP padding) và 
 |------|---------|-------|
 | **run.sh** | ▶️ **Run Main** | Script chạy chương trình Main |
 | **run_improvements.sh** | ▶️ **Run Demo** | Script chạy ImprovementsDemo |
-| **doc.md** | 📖 **Technical Docs** | Tài liệu kỹ thuật chi tiết |
+| **run_string_byte.sh** | ▶️ **Run Demo** | Script chạy StringByteDemo |
+| **doc.md** | 📖 **Technical Docs** in| Tài liệu kỹ thuật chi tiết |
 
 ---
 
@@ -99,6 +104,16 @@ javac *.java -d bin
 - [1] Strong Key Generation performance
 - [2] OAEP Encryption randomness test
 - [3] CRT Decryption speed comparison
+
+### 4. Chạy String/Byte Demo
+
+```bash
+./run_string_byte.sh
+```
+
+**Demo sẽ showcase:**
+- [1] String Encryption/Decryption
+- [2] Byte[] Encryption/Decryption
 
 ---
 
@@ -142,6 +157,26 @@ BigInteger decrypted = rsaUtils.decryptOAEP_CRT(cipher, keyPair);
 
 // Hoặc giải mã chỉ với OAEP (không dùng CRT)
 // BigInteger decrypted = rsaUtils.decryptOAEP(cipher, keyPair.getDecryptKey(), keyPair.getModulus());
+```
+
+### Bước 5: Mã hóa/Giải mã String & Byte[] (Mới)
+
+```java
+// Mã hóa String
+String text = "Hello RSA!";
+BigInteger cipherText = rsaUtils.encryptOAEP(text, keyPair.getEncryptKey(), keyPair.getModulus());
+
+// Giải mã ra String
+String decryptedText = rsaUtils.decryptOAEP_CRTToString(cipherText, keyPair);
+System.out.println(decryptedText); // "Hello RSA!"
+
+// Mã hóa byte[]
+byte[] data = {1, 2, 3};
+BigInteger cipherBytes = rsaUtils.encryptOAEP(data, keyPair.getEncryptKey(), keyPair.getModulus());
+
+// Giải mã ra byte[]
+byte[] decryptedBytes = rsaUtils.decryptOAEP_CRTToBytes(cipherBytes, keyPair);
+```
 ```
 
 ---
