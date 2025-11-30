@@ -82,4 +82,31 @@ public interface RSACipher {
      * @return The original message
      */
     BigInteger decryptOAEP_CRT(BigInteger cipher, KeyPair keyPair);
+
+
+    // EXTENDED OPERATIONS (String & byte[])
+
+    BigInteger encrypt(String message, BigInteger e, BigInteger n);
+
+    BigInteger encrypt(byte[] message, BigInteger e, BigInteger n);
+
+    String decryptToString(BigInteger cipher, BigInteger d, BigInteger n);
+
+    byte[] decryptToBytes(BigInteger cipher, BigInteger d, BigInteger n);
+
+    BigInteger encryptOAEP(String message, BigInteger e, BigInteger n);
+
+    BigInteger encryptOAEP(byte[] message, BigInteger e, BigInteger n);
+
+    String decryptOAEPToString(BigInteger cipher, BigInteger d, BigInteger n);
+
+    byte[] decryptOAEPToBytes(BigInteger cipher, BigInteger d, BigInteger n);
+
+    String decryptCRTToString(BigInteger cipher, KeyPair keyPair);
+
+    byte[] decryptCRTToBytes(BigInteger cipher, KeyPair keyPair);
+
+    String decryptOAEP_CRTToString(BigInteger cipher, KeyPair keyPair);
+
+    byte[] decryptOAEP_CRTToBytes(BigInteger cipher, KeyPair keyPair);
 }
