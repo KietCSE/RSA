@@ -9,7 +9,7 @@ Thư viện RSA với các tính năng bảo mật nâng cao (OAEP padding) và 
 1. [Giới thiệu Interface RSACipher](#-giới-thiệu-interface-rsacipher)
 2. [Cấu trúc dự án](#-cấu-trúc-dự-án)
 3. [Hướng dẫn chạy](#-hướng-dẫn-chạy)
-4. [Cách sử dụng](#-cách-sử-dụng)
+4. [Cách chương trình hoạt động](#-cách-chương-trình-hoạt-động)
 5. [Ví dụ code](#-ví-dụ-code)
 
 ---
@@ -28,17 +28,17 @@ Thư viện RSA với các tính năng bảo mật nâng cao (OAEP padding) và 
 
 ### Các phương thức trong Interface
 
-| Phương thức | Mô tả | Khuyến nghị |
-|-------------|-------|-------------|
-| `encrypt()` | Mã hóa RSA cơ bản: c = m^e mod n | ⚠️ Chỉ dùng cho demo |
-| `decrypt()` | Giải mã RSA cơ bản: m = c^d mod n | ⚠️ Chỉ dùng cho demo |
-| `encryptOAEP()` | Mã hóa với OAEP padding (bảo mật) | ✅ Khuyến nghị cho production |
-| `decryptOAEP()` | Giải mã với OAEP padding | ✅ Khuyến nghị cho production |
-| `decryptCRT()` | Giải mã nhanh với CRT (~4x faster) | ⚡ Tối ưu hiệu suất |
-| `decryptOAEP_CRT()` | Giải mã nhanh + bảo mật | ⭐ **RECOMMENDED** |
-| `encrypt(String/byte[])` | Mã hóa String hoặc byte[] | ✅ Tiện lợi |
-| `decryptToString()` | Giải mã ra String | ✅ Tiện lợi |
-| `decryptToBytes()` | Giải mã ra byte[] | ✅ Tiện lợi |
+| Phương thức              | Mô tả                              | Khuyến nghị                   |
+| ------------------------ | ---------------------------------- | ----------------------------- |
+| `encrypt()`              | Mã hóa RSA cơ bản: c = m^e mod n   | ⚠️ Chỉ dùng cho demo          |
+| `decrypt()`              | Giải mã RSA cơ bản: m = c^d mod n  | ⚠️ Chỉ dùng cho demo          |
+| `encryptOAEP()`          | Mã hóa với OAEP padding (bảo mật)  | ✅ Khuyến nghị cho production |
+| `decryptOAEP()`          | Giải mã với OAEP padding           | ✅ Khuyến nghị cho production |
+| `decryptCRT()`           | Giải mã nhanh với CRT (~4x faster) | ⚡ Tối ưu hiệu suất           |
+| `decryptOAEP_CRT()`      | Giải mã nhanh + bảo mật            | ⭐ **RECOMMENDED**            |
+| `encrypt(String/byte[])` | Mã hóa String hoặc byte[]          | ✅ Tiện lợi                   |
+| `decryptToString()`      | Giải mã ra String                  | ✅ Tiện lợi                   |
+| `decryptToBytes()`       | Giải mã ra byte[]                  | ✅ Tiện lợi                   |
 
 ---
 
@@ -46,78 +46,85 @@ Thư viện RSA với các tính năng bảo mật nâng cao (OAEP padding) và 
 
 ### Core Files (Phần chính)
 
-| File | Vai trò | Mô tả |
-|------|---------|-------|
-| **RSACipher.java** | 🎯 **Interface chính** | Định nghĩa contract cho mã hóa/giải mã RSA |
-| **RSAUtils.java** | 🔐 **Implementation** | Triển khai RSACipher với OAEP & CRT |
-| **KeyPair.java** | 🔑 **Key Generation** | Tạo cặp khóa RSA (random/strong) |
-| **Utils.java** | 🛠️ **Helper Utilities** | Modular exponentiation, GCD, XOR, etc. |
-| **PrimeGenerator.java** | 🎲 **Prime Generator** | Tạo số nguyên tố lớn cho RSA |
-| **RSAPrimeVerifier.java** | ✅ **Prime Verifier** | Kiểm tra tính hợp lệ của p, q cho RSA |
+| File                      | Vai trò                 | Mô tả                                      |
+| ------------------------- | ----------------------- | ------------------------------------------ |
+| **RSACipher.java**        | 🎯 **Interface chính**  | Định nghĩa contract cho mã hóa/giải mã RSA |
+| **RSAUtils.java**         | 🔐 **Implementation**   | Triển khai RSACipher với OAEP & CRT        |
+| **KeyPair.java**          | 🔑 **Key Generation**   | Tạo cặp khóa RSA (random/strong)           |
+| **Utils.java**            | 🛠️ **Helper Utilities** | Modular exponentiation, GCD, XOR, etc.     |
+| **PrimeGenerator.java**   | 🎲 **Prime Generator**  | Tạo số nguyên tố lớn cho RSA               |
+| **RSAPrimeVerifier.java** | ✅ **Prime Verifier**   | Kiểm tra tính hợp lệ của p, q cho RSA      |
 
 ### Demo & Test Files
 
-| File | Vai trò | Mô tả |
-|------|---------|-------|
-| **Main.java** | 🚀 **Demo cơ bản** | Demo encrypt/decrypt với OAEP + CRT |
-| **ImprovementsDemo.java** | 📊 **Demo nâng cao** | Benchmark OAEP, CRT, Strong KeyPair |
-| **StringByteDemo.java** | 🔤 **Demo String/Byte** | Demo mã hóa/giải mã String và byte[] |
-| **Test.java** | 🧪 **Testing** | Unit tests cho các components |
+| File                      | Vai trò                 | Mô tả                                |
+| ------------------------- | ----------------------- | ------------------------------------ |
+| **Main.java**             | 🚀 **Demo cơ bản**      | Demo encrypt/decrypt với OAEP + CRT  |
+| **ImprovementsDemo.java** | 📊 **Demo nâng cao**    | Benchmark OAEP, CRT, Strong KeyPair  |
+| **StringByteDemo.java**   | 🔤 **Demo String/Byte** | Demo mã hóa/giải mã String và byte[] |
+| **Test.java**             | 🧪 **Testing**          | Unit tests cho các components        |
 
 ### Scripts & Documentation
 
-| File | Vai trò | Mô tả |
-|------|---------|-------|
-| **run.sh** | ▶️ **Run Main** | Script chạy chương trình Main |
-| **run_improvements.sh** | ▶️ **Run Demo** | Script chạy ImprovementsDemo |
-| **run_string_byte.sh** | ▶️ **Run Demo** | Script chạy StringByteDemo |
-| **doc.md** | 📖 **Technical Docs** in| Tài liệu kỹ thuật chi tiết |
+| File                    | Vai trò         | Mô tả                         |
+| ----------------------- | --------------- | ----------------------------- |
+| **run.sh**              | ▶️ **Run Main** | Script chạy chương trình Main |
+| **run_improvements.sh** | ▶️ **Run Demo** | Script chạy ImprovementsDemo  |
+| **run_string_byte.sh**  | ▶️ **Run Demo** | Script chạy StringByteDemo    |
 
 ---
 
 ## 🚀 Hướng dẫn chạy
 
-### 1. Compile tất cả files
+### 1. Di chuyển vào thư mục mã nguồn
+
+```bash
+cd srcs
+```
+
+### 2. Compile tất cả files
 
 ```bash
 javac *.java -d bin
 ```
 
-### 2. Chạy chương trình chính (Main)
+### 3. Chạy chương trình chính (Main)
 
 ```bash
 ./run.sh
 ```
 
-
 **Chương trình sẽ yêu cầu nhập:**
+
 - Modulus bit-length (ví dụ: 512, 1024)
 - Message để mã hóa (số nguyên dương)
 
-### 3. Chạy Improvements Demo
+### 4. Chạy Improvements Demo
 
 ```bash
 ./run_improvements.sh
 ```
 
 **Demo sẽ showcase:**
+
 - [1] Strong Key Generation performance
 - [2] OAEP Encryption randomness test
 - [3] CRT Decryption speed comparison
 
-### 4. Chạy String/Byte Demo
+### 5. Chạy String/Byte Demo
 
 ```bash
 ./run_string_byte.sh
 ```
 
 **Demo sẽ showcase:**
+
 - [1] String Encryption/Decryption
 - [2] Byte[] Encryption/Decryption
 
 ---
 
-## 💻 Cách sử dụng
+## 💻 Cách chương trình hoạt động
 
 ### Bước 1: Tạo RSAUtils instance
 
@@ -143,8 +150,8 @@ BigInteger message = new BigInteger("12345");
 
 // Mã hóa với OAEP padding (bảo mật)
 BigInteger cipher = rsaUtils.encryptOAEP(
-    message, 
-    keyPair.getEncryptKey(), 
+    message,
+    keyPair.getEncryptKey(),
     keyPair.getModulus()
 );
 ```
@@ -177,7 +184,6 @@ BigInteger cipherBytes = rsaUtils.encryptOAEP(data, keyPair.getEncryptKey(), key
 // Giải mã ra byte[]
 byte[] decryptedBytes = rsaUtils.decryptOAEP_CRTToBytes(cipherBytes, keyPair);
 ```
-```
 
 ---
 
@@ -192,23 +198,23 @@ public class BasicExample {
     public static void main(String[] args) {
         // 1. Tạo instance
         RSAUtils rsaUtils = new RSAUtils();
-        
+
         // 2. Tạo key pair
         KeyPair keyPair = KeyPair.generateStrongKeyPair(1024);
-        
+
         // 3. Message
         BigInteger message = new BigInteger("999999");
-        
+
         // 4. Encrypt với OAEP
         BigInteger cipher = rsaUtils.encryptOAEP(
-            message, 
-            keyPair.getEncryptKey(), 
+            message,
+            keyPair.getEncryptKey(),
             keyPair.getModulus()
         );
-        
+
         // 5. Decrypt với OAEP + CRT
         BigInteger decrypted = rsaUtils.decryptOAEP_CRT(cipher, keyPair);
-        
+
         // 6. Verify
         System.out.println("Original:  " + message);
         System.out.println("Decrypted: " + decrypted);
@@ -226,30 +232,30 @@ public class PerformanceExample {
     public static void main(String[] args) {
         RSAUtils rsaUtils = new RSAUtils();
         KeyPair keyPair = KeyPair.generateStrongKeyPair(2048);
-        
+
         BigInteger message = new BigInteger("12345");
         BigInteger cipher = rsaUtils.encryptOAEP(
-            message, 
-            keyPair.getEncryptKey(), 
+            message,
+            keyPair.getEncryptKey(),
             keyPair.getModulus()
         );
-        
+
         int iterations = 100;
-        
+
         // Standard decryption
         long startStd = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {
             rsaUtils.decryptOAEP(cipher, keyPair.getDecryptKey(), keyPair.getModulus());
         }
         long timeStd = System.currentTimeMillis() - startStd;
-        
+
         // CRT decryption
         long startCRT = System.currentTimeMillis();
         for (int i = 0; i < iterations; i++) {
             rsaUtils.decryptOAEP_CRT(cipher, keyPair);
         }
         long timeCRT = System.currentTimeMillis() - startCRT;
-        
+
         System.out.println("Standard: " + timeStd + "ms");
         System.out.println("CRT:      " + timeCRT + "ms");
         System.out.printf("Speedup: %.2fx faster\n", (double) timeStd / timeCRT);
@@ -267,4 +273,3 @@ public class PerformanceExample {
 2. Sử dụng `encryptOAEP()` thay vì `encrypt()` cơ bản
 3. Sử dụng `decryptOAEP_CRT()` để có cả tốc độ và bảo mật
 4. Dùng modulus ≥ 2048 bits cho bảo mật tốt
-
